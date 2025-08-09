@@ -1,36 +1,88 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DineSpot - 外食記録アプリ
 
-## Getting Started
+外食体験を地図上で記録・共有できるソーシャルプラットフォーム
 
-First, run the development server:
+## 機能
+
+- 🗺️ **地図機能**: Mapboxを使用したインタラクティブな地図
+- 📍 **投稿機能**: お店での食事体験を写真と共に記録
+- 👤 **認証機能**: Supabase認証（Google OAuth対応）
+- ❤️ **ソーシャル機能**: いいね機能
+- 📱 **レスポンシブUI**: Instagram風のモダンなデザイン
+
+## 技術スタック
+
+- **Frontend**: Next.js 15, TypeScript, TailwindCSS, shadcn/ui
+- **Backend**: Supabase, Prisma ORM
+- **Map**: Mapbox GL JS
+- **Forms**: Conform + Zod + Server Actions
+- **State**: Zustand
+- **Testing**: Vitest, React Testing Library, Playwright
+
+## 環境設定
+
+1. 必要な環境変数を設定してください：
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. `.env.local`に以下の値を設定：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```env
+# Database (Supabase)
+DATABASE_URL="your-supabase-database-url"
+DIRECT_URL="your-supabase-direct-url"
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL="your-supabase-project-url"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="your-supabase-anon-key"
 
-## Learn More
+# Mapbox
+NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="your-mapbox-access-token"
+```
 
-To learn more about Next.js, take a look at the following resources:
+3. Prismaデータベースの初期化：
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx prisma migrate dev
+npx prisma generate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 開発
 
-## Deploy on Vercel
+```bash
+# 開発サーバー起動
+npm run dev
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# 型チェック
+npm run typecheck
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# リント
+npm run lint
+
+# テスト
+npm run test
+npm run test:e2e
+```
+
+## セットアップ手順
+
+### 1. Supabaseプロジェクト作成
+
+1. [Supabase](https://supabase.com)でプロジェクト作成
+2. Google OAuth設定
+3. データベースURL取得
+
+### 2. Mapbox設定
+
+1. [Mapbox](https://mapbox.com)でアカウント作成
+2. アクセストークン取得
+
+### 3. データベース初期化
+
+```bash
+npx prisma db push
+```
+
+アプリが http://localhost:3000 で起動します。
