@@ -4,11 +4,11 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  let next = searchParams.get('next') ?? '/'
+  let next = searchParams.get('next') ?? '/main'
 
   // Ensure next URL is relative to prevent open redirects
   if (!next.startsWith('/')) {
-    next = '/'
+    next = '/main'
   }
 
   if (code) {

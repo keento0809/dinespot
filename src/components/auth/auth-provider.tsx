@@ -18,7 +18,7 @@ const AuthContext = createContext<{
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setUser, setLoading, setError, error } = useAuthStore()
+  const { setUser, setLoading, setError, error, signOut: clearAuthState } = useAuthStore()
   const supabase = createClient()
 
   useEffect(() => {
@@ -72,8 +72,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?next=/main`,
           scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+          skipBrowserRedirect: false,
         },
       })
       
@@ -98,6 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut()
+    clearAuthState()
   }
 
   const clearError = () => {
