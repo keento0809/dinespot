@@ -8,14 +8,16 @@ import { Post } from '@/types'
 
 export default function MainPage() {
   const { user, isLoading: authLoading } = useAuthStore()
-  const { posts, fetchPosts, isLoading: postsLoading } = usePostsStore()
+  const { posts, isLoading: postsLoading } = usePostsStore()
   const [displayPosts, setDisplayPosts] = useState<Post[]>([])
 
+  // TODO: Implement fetchPosts API call when backend is ready
   useEffect(() => {
     if (user && !authLoading) {
-      fetchPosts()
+      // fetchPosts() - will implement when API is ready
+      console.log('User authenticated:', user)
     }
-  }, [user, authLoading, fetchPosts])
+  }, [user, authLoading])
 
   useEffect(() => {
     setDisplayPosts(posts)
@@ -26,7 +28,7 @@ export default function MainPage() {
     // TODO: Show restaurant details or posts in a sidebar/modal
   }
 
-  if (authLoading) {
+  if (authLoading || postsLoading) {
     return (
       <div className="h-screen w-screen flex items-center justify-center bg-gray-100">
         <div className="text-lg text-gray-600">読み込み中...</div>
