@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Post } from '@/types'
-import { toggle_like } from '@/app/actions/post-actions'
+import { toggle_post_like } from '@/app/actions/post-actions'
 import { cn } from '@/lib/utils'
 
 interface PostCardProps {
@@ -24,10 +24,12 @@ export function PostCard({ post }: PostCardProps) {
 
     setIsLiking(true)
     try {
-      const result = await toggle_like(post.id)
-      if (result.success && typeof result.liked === 'boolean') {
-        setIsLiked(result.liked)
-        setLikesCount(prev => result.liked ? prev + 1 : prev - 1)
+      const result = await toggle_post_like(post.id)
+      if (result.success && typeof result.isLiked === 'boolean') {
+        setIsLiked(result.isLiked)
+        if (typeof result.likesCount === 'number') {
+          setLikesCount(result.likesCount)
+        }
       }
     } catch (error) {
       console.error('いいね処理エラー:', error)

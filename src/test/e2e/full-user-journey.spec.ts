@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('DineSpot フルユーザージャーニー', () => {
-  test.skip('完全なユーザーフローをテスト', async ({ page }) => {
+  test.skip('完全なユーザーフローをテスト', async () => {
     // 実際のSupabase/Mapbox認証が必要なため、統合環境でのみ実行
   })
 

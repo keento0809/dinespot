@@ -8,13 +8,17 @@ import { User } from '@/types'
 const AuthContext = createContext<{
   signIn: () => Promise<void>
   signOut: () => Promise<void>
+  error: string | null
+  clearError: () => void
 }>({
   signIn: async () => {},
   signOut: async () => {},
+  error: null,
+  clearError: () => {},
 })
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const { setUser, setLoading } = useAuthStore()
+  const { setUser, setLoading, setError, error } = useAuthStore()
   const supabase = createClient()
 
   useEffect(() => {
@@ -63,20 +67,45 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [setUser, setLoading, supabase.auth])
 
   const signIn = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    })
+    try {
+      setError(null)
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+          scopes: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+        },
+      })
+      
+      if (error) {
+        throw error
+      }
+    } catch (err) {
+      let errorMessage = 'ログインに失敗しました'
+      
+      if (err instanceof Error) {
+        if (err.message.includes('provider is not enabled')) {
+          errorMessage = 'Googleログインが設定されていません。管理者にお問い合わせください。'
+        } else {
+          errorMessage = err.message
+        }
+      }
+      
+      setError(errorMessage)
+      console.error('Auth error:', err)
+    }
   }
 
   const signOut = async () => {
     await supabase.auth.signOut()
   }
 
+  const clearError = () => {
+    setError(null)
+  }
+
   return (
-    <AuthContext.Provider value={{ signIn, signOut }}>
+    <AuthContext.Provider value={{ signIn, signOut, error, clearError }}>
       {children}
     </AuthContext.Provider>
   )
