@@ -23,10 +23,11 @@ interface SidebarProps {
   onCreatePost?: () => void
   onShowProfile?: () => void
   onShowSettings?: () => void
+  onShowSearch?: () => void
   onCollapseChange?: (isCollapsed: boolean) => void
 }
 
-export function Sidebar({ onCreatePost, onShowProfile, onShowSettings, onCollapseChange }: SidebarProps) {
+export function Sidebar({ onCreatePost, onShowProfile, onShowSettings, onShowSearch, onCollapseChange }: SidebarProps) {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const router = useRouter()
   const { signOut } = useAuth()
@@ -57,7 +58,7 @@ export function Sidebar({ onCreatePost, onShowProfile, onShowSettings, onCollaps
     {
       icon: Search,
       label: '検索',
-      action: () => console.log('Search clicked'),
+      action: onShowSearch,
     },
     {
       icon: Bookmark,

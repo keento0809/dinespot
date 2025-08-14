@@ -7,10 +7,18 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 
 interface MapViewProps {
   posts: Post[]
-  onRestaurantClick?: (restaurantId: string, coordinates: [number, number]) => void
+  searchResults?: Array<{
+    id: string
+    name: string
+    location: { lat: number; lng: number }
+    address: string
+    rating?: number
+  }>
+  onRestaurantClick?: (restaurantId: string, coordinates: [number, number], screenPosition: { x: number, y: number }) => void
+  onMapClick?: (coordinates: [number, number], screenPosition: { x: number, y: number }) => void
 }
 
-export function MapView({ posts, onRestaurantClick }: MapViewProps) {
+export function MapView({ posts, searchResults, onRestaurantClick, onMapClick }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
@@ -94,9 +102,10 @@ export function MapView({ posts, onRestaurantClick }: MapViewProps) {
           const feature = e.features[0]
           const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number]
           const restaurantId = feature.properties?.restaurantId
+          const screenPosition = { x: e.point.x, y: e.point.y }
           
           if (onRestaurantClick && restaurantId) {
-            onRestaurantClick(restaurantId, coordinates)
+            onRestaurantClick(restaurantId, coordinates, screenPosition)
           }
         }
       })
