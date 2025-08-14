@@ -7,13 +7,25 @@ import 'mapbox-gl/dist/mapbox-gl.css'
 
 interface MapViewProps {
   posts: Post[]
+  searchResults?: Array<{
+    id: string
+    name: string
+    location: { lat: number; lng: number }
+    address: string
+    rating?: number
+  }>
   onRestaurantClick?: (restaurantId: string, coordinates: [number, number]) => void
+  onMapClick?: (coordinates: [number, number]) => void
 }
 
-export function MapView({ posts, onRestaurantClick }: MapViewProps) {
+export function MapView({ posts, searchResults, onRestaurantClick, onMapClick }: MapViewProps) {
   const mapContainer = useRef<HTMLDivElement>(null)
   const map = useRef<mapboxgl.Map | null>(null)
   const [isLoaded, setIsLoaded] = useState(false)
+  
+  // Store current callback references
+  const callbacksRef = useRef({ onRestaurantClick, onMapClick })
+  callbacksRef.current = { onRestaurantClick, onMapClick }
 
   useEffect(() => {
     if (!mapContainer.current || map.current) return
@@ -39,6 +51,16 @@ export function MapView({ posts, onRestaurantClick }: MapViewProps) {
         cluster: true,
         clusterMaxZoom: 14,
         clusterRadius: 50,
+      })
+
+      // Add source for search results
+      map.current!.addSource('search-results', {
+        type: 'geojson',
+        data: {
+          type: 'FeatureCollection',
+          features: [],
+        },
+        cluster: false,
       })
 
       // Add cluster circles
@@ -88,6 +110,19 @@ export function MapView({ posts, onRestaurantClick }: MapViewProps) {
         },
       })
 
+      // Add search result markers
+      map.current!.addLayer({
+        id: 'search-results',
+        type: 'circle',
+        source: 'search-results',
+        paint: {
+          'circle-color': '#ff6b35',
+          'circle-radius': 10,
+          'circle-stroke-width': 2,
+          'circle-stroke-color': '#fff',
+        },
+      })
+
       // Handle click on individual restaurants
       map.current!.on('click', 'unclustered-point', (e) => {
         if (e.features && e.features[0]) {
@@ -95,8 +130,21 @@ export function MapView({ posts, onRestaurantClick }: MapViewProps) {
           const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number]
           const restaurantId = feature.properties?.restaurantId
           
-          if (onRestaurantClick && restaurantId) {
-            onRestaurantClick(restaurantId, coordinates)
+          if (callbacksRef.current.onRestaurantClick && restaurantId) {
+            callbacksRef.current.onRestaurantClick(restaurantId, coordinates)
+          }
+        }
+      })
+
+      // Handle click on search results
+      map.current!.on('click', 'search-results', (e) => {
+        if (e.features && e.features[0]) {
+          const feature = e.features[0]
+          const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number]
+          const restaurantId = feature.properties?.restaurantId
+          
+          if (callbacksRef.current.onRestaurantClick && restaurantId) {
+            callbacksRef.current.onRestaurantClick(restaurantId, coordinates)
           }
         }
       })
@@ -134,6 +182,12 @@ export function MapView({ posts, onRestaurantClick }: MapViewProps) {
       map.current!.on('mouseleave', 'unclustered-point', () => {
         map.current!.getCanvas().style.cursor = ''
       })
+      map.current!.on('mouseenter', 'search-results', () => {
+        map.current!.getCanvas().style.cursor = 'pointer'
+      })
+      map.current!.on('mouseleave', 'search-results', () => {
+        map.current!.getCanvas().style.cursor = ''
+      })
     })
 
     return () => {
@@ -142,7 +196,7 @@ export function MapView({ posts, onRestaurantClick }: MapViewProps) {
         map.current = null
       }
     }
-  }, [onRestaurantClick])
+  }, []) // Remove callback dependencies to prevent re-rendering
 
   // Update markers when posts change
   useEffect(() => {
@@ -172,6 +226,62 @@ export function MapView({ posts, onRestaurantClick }: MapViewProps) {
       })
     }
   }, [posts, isLoaded])
+
+  // Update search results when they change
+  useEffect(() => {
+    if (!map.current || !isLoaded) return
+
+    const source = map.current.getSource('search-results') as mapboxgl.GeoJSONSource
+    if (source && searchResults) {
+      const features = searchResults.map((restaurant) => ({
+        type: 'Feature' as const,
+        properties: {
+          restaurantId: restaurant.id,
+          restaurantName: restaurant.name,
+          address: restaurant.address,
+          rating: restaurant.rating,
+        },
+        geometry: {
+          type: 'Point' as const,
+          coordinates: [restaurant.location.lng, restaurant.location.lat],
+        },
+      }))
+
+      source.setData({
+        type: 'FeatureCollection',
+        features,
+      })
+
+      // Fit map to show search results
+      if (features.length > 0) {
+        const coordinates = features.map(f => f.geometry.coordinates as [number, number])
+        
+        if (coordinates.length === 1) {
+          // Single result - center on it
+          map.current.flyTo({
+            center: coordinates[0],
+            zoom: 15,
+          })
+        } else {
+          // Multiple results - fit bounds
+          const bounds = coordinates.reduce((bounds, coord) => {
+            return bounds.extend(coord)
+          }, new mapboxgl.LngLatBounds(coordinates[0], coordinates[0]))
+          
+          map.current.fitBounds(bounds, {
+            padding: 50,
+            maxZoom: 15,
+          })
+        }
+      }
+    } else if (source) {
+      // Clear search results
+      source.setData({
+        type: 'FeatureCollection',
+        features: [],
+      })
+    }
+  }, [searchResults, isLoaded])
 
   return (
     <div className="relative h-full w-full">
