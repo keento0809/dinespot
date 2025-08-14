@@ -72,14 +72,13 @@ export default function MainPage() {
   const handleRestaurantClick = useCallback(
     (
       restaurantId: string,
-      coordinates: [number, number],
-      screenPosition: { x: number; y: number }
+      coordinates: [number, number]
     ) => {
       const restaurant = displayPosts.find(
         (post) => post.restaurant.id === restaurantId
       )?.restaurant
       if (restaurant) {
-        console.log('Restaurant clicked:', restaurant, coordinates, screenPosition)
+        console.log('Restaurant clicked:', restaurant, coordinates)
         // TODO: Show restaurant tooltip when component is available
       }
     },
@@ -128,10 +127,7 @@ export default function MainPage() {
   }
 
   const handleMapClick = useCallback(
-    async (
-      coordinates: [number, number],
-      screenPosition: { x: number; y: number }
-    ) => {
+    async (coordinates: [number, number]) => {
       console.log('=== MAP CLICKED ===')
       console.log('Coordinates:', coordinates)
 
