@@ -14,7 +14,7 @@ interface MapViewProps {
     address: string
     rating?: number
   }>
-  onRestaurantClick?: (restaurantId: string, coordinates: [number, number]) => void
+  onRestaurantClick?: (restaurantId: string, coordinates: [number, number], mousePosition: { x: number; y: number }) => void
   onMapClick?: (coordinates: [number, number]) => void
 }
 
@@ -129,9 +129,10 @@ export function MapView({ posts, searchResults, onRestaurantClick, onMapClick }:
           const feature = e.features[0]
           const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number]
           const restaurantId = feature.properties?.restaurantId
+          const mousePosition = { x: e.originalEvent.clientX, y: e.originalEvent.clientY }
           
           if (callbacksRef.current.onRestaurantClick && restaurantId) {
-            callbacksRef.current.onRestaurantClick(restaurantId, coordinates)
+            callbacksRef.current.onRestaurantClick(restaurantId, coordinates, mousePosition)
           }
         }
       })
@@ -142,9 +143,10 @@ export function MapView({ posts, searchResults, onRestaurantClick, onMapClick }:
           const feature = e.features[0]
           const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [number, number]
           const restaurantId = feature.properties?.restaurantId
+          const mousePosition = { x: e.originalEvent.clientX, y: e.originalEvent.clientY }
           
           if (callbacksRef.current.onRestaurantClick && restaurantId) {
-            callbacksRef.current.onRestaurantClick(restaurantId, coordinates)
+            callbacksRef.current.onRestaurantClick(restaurantId, coordinates, mousePosition)
           }
         }
       })

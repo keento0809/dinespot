@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { MapView } from '@/components/map/map-view'
 import { RestaurantSearch } from '@/components/map/restaurant-search'
+import { RestaurantTooltip } from '@/components/map/restaurant-tooltip'
 import { Sidebar } from '@/components/layout/sidebar'
 import { useAuthStore } from '@/stores/auth-store'
 import { usePostsStore } from '@/stores/posts-store'
@@ -13,18 +14,19 @@ export default function MainPage() {
   const { isLoading: authLoading } = useAuthStore()
   const { posts, isLoading: postsLoading } = usePostsStore()
   const [displayPosts, setDisplayPosts] = useState<Post[]>([])
-  // const [selectedRestaurant, setSelectedRestaurant] = useState<{
-  //   restaurant: {
-  //     id: string
-  //     name: string
-  //     address?: string
-  //   }
-  //   position: {
-  //     x: number
-  //     y: number
-  //   }
-  //   coordinates: [number, number]
-  // } | null>(null)
+  const [selectedRestaurant, setSelectedRestaurant] = useState<{
+    restaurant: {
+      id: string
+      name: string
+      address?: string
+      rating?: number
+    }
+    position: {
+      x: number
+      y: number
+    }
+    coordinates: [number, number]
+  } | null>(null)
   // const [isCreatePostDialogOpen, setIsCreatePostDialogOpen] = useState(false)
   const [searchResults, setSearchResults] = useState<
     Array<{
@@ -72,36 +74,66 @@ export default function MainPage() {
   const handleRestaurantClick = useCallback(
     (
       restaurantId: string,
-      coordinates: [number, number]
+      coordinates: [number, number],
+      mousePosition: { x: number; y: number }
     ) => {
+      // First check in search results
+      const searchRestaurant = searchResults.find(
+        (restaurant) => restaurant.id === restaurantId
+      )
+      
+      if (searchRestaurant) {
+        setSelectedRestaurant({
+          restaurant: {
+            id: searchRestaurant.id,
+            name: searchRestaurant.name,
+            address: searchRestaurant.address,
+            rating: searchRestaurant.rating,
+          },
+          position: mousePosition,
+          coordinates,
+        })
+        return
+      }
+
+      // Then check in display posts
       const restaurant = displayPosts.find(
         (post) => post.restaurant.id === restaurantId
       )?.restaurant
+      
       if (restaurant) {
-        console.log('Restaurant clicked:', restaurant, coordinates)
-        // TODO: Show restaurant tooltip when component is available
+        setSelectedRestaurant({
+          restaurant: {
+            id: restaurant.id,
+            name: restaurant.name,
+            address: restaurant.address,
+          },
+          position: mousePosition,
+          coordinates,
+        })
       }
     },
-    [displayPosts]
+    [displayPosts, searchResults]
   )
 
-  // const handleAddPost = () => {
-  //   setIsCreatePostDialogOpen(true)
-  //   setSelectedRestaurant(null)
-  // }
+  const handleAddPost = () => {
+    console.log('Add post for restaurant:', selectedRestaurant?.restaurant.id)
+    // TODO: Implement create post functionality
+    setSelectedRestaurant(null)
+  }
 
-  // const handleSeePosts = () => {
-  //   console.log(
-  //     'Show posts for restaurant:',
-  //     selectedRestaurant?.restaurant.id
-  //   )
-  //   // TODO: Implement show posts functionality
-  //   setSelectedRestaurant(null)
-  // }
+  const handleSeePosts = () => {
+    console.log(
+      'Show posts for restaurant:',
+      selectedRestaurant?.restaurant.id
+    )
+    // TODO: Implement show posts functionality
+    setSelectedRestaurant(null)
+  }
 
-  // const handleCloseTooltip = () => {
-  //   setSelectedRestaurant(null)
-  // }
+  const handleCloseTooltip = () => {
+    setSelectedRestaurant(null)
+  }
 
   const handleCreatePost = () => {
     console.log('Create post clicked')
@@ -226,6 +258,16 @@ export default function MainPage() {
             onResultsChange={setSearchResults}
             currentLocation={currentLocation}
             onClose={() => setIsSearchVisible(false)}
+          />
+        )}
+
+        {selectedRestaurant && (
+          <RestaurantTooltip
+            restaurant={selectedRestaurant.restaurant}
+            position={selectedRestaurant.position}
+            onClose={handleCloseTooltip}
+            onAddPost={handleAddPost}
+            onSeePosts={handleSeePosts}
           />
         )}
       </div>
